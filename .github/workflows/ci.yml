@@ -33,8 +33,8 @@ jobs:
             - name: package sam
               run: sam package --s3-bucket "$AUTOMATION_SAM_BUCKET" --s3-prefix "$SERVICE_NAME" --output-template-file ./template.out.yml
 
-            - name: publish same
-              run: sam publish --region us-west-1 --template ./template.out.yml
+            - name: publish sam
+              run: sam publish --region "$AWS_DEFAULT_REGION" --template ./template.out.yml
 
             - name: deploy sam
               run: sam deploy --stack-name "$SERVICE_NAME-$ENVIRONMENT_NAME-$AWS_DEFAULT_REGION" --template-file ./template.out.yml --parameter-overrides "Environment=${ENVIRONMENT_NAME}" --no-fail-on-empty-changeset --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND
