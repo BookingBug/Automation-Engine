@@ -52,7 +52,7 @@ Resources:
         Type: AWS::EC2::SecurityGroup
         Properties:
             GroupDescription: A database security group.
-            VpcId: default-vpc-088de60f0060036ad
+            VpcId: vpc-088de60f0060036ad
 
     AutomationLambdaToProxyIngressRule:
         Type: AWS::EC2::SecurityGroupIngress
