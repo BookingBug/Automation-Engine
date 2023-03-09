@@ -53,26 +53,30 @@ Resources:
         Properties:
             GroupDescription: A database security group.
             VpcId: vpc-088de60f0060036ad
+    
+    AutomationEngineLambdaSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Security Group for Lambda.
+            VpcId: vpc-088de60f0060036ad
 
-    AutomationLambdaToProxyIngressRule:
+    AutomationEngineLambdaIngressRule:
         Type: AWS::EC2::SecurityGroupIngress
         Properties:
-            Description: Allows Schedule Tracker lambda to access the database.
+            Description: Allows lambda to access the database.
             IpProtocol: tcp
-            GroupId: !Ref AutomationEngineDBSecurityGroup
             FromPort: 5432
             ToPort: 5432
-            SourceSecurityGroupId: sg-0de07f65961e3be93
+            SourceSecurityGroupId: !Ref AutomationEngineLambdaSecurityGroup
 
-    AutomationBastionToProxyIngressRule:
+    AutomationEngineDBIngressRule:
         Type: AWS::EC2::SecurityGroupIngress
         Properties:
-            Description: Allows bastion to access the database.
+            Description: Allows lambda to access the database.
             IpProtocol: tcp
-            GroupId: !Ref AutomationEngineDBSecurityGroup
             FromPort: 5432
             ToPort: 5432
-            SourceSecurityGroupId: sg-0e3670f02f02c6381
+            SourceSecurityGroupId: !Ref AutomationEngineDBSecurityGroup
 
     AutomationEngineRDSCluster:
         Type: AWS::RDS::DBCluster
