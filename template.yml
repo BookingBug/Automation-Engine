@@ -96,7 +96,7 @@ Resources:
                         ':SecretString:password}}',
                     ],
                 ]
-            DatabaseName: !Sub 'Automation-Engine-${Environment}'
+            DatabaseName: !Sub 'automationengine${Environment}'
             Engine: aurora-postgresql
             EngineVersion: 14.6
             Port: 5432
