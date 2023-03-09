@@ -24,6 +24,20 @@ Globals:
             Variables:
                 CertificateArn: !Ref SSLCertificate
 
+Metadata:
+    AWS::ServerlessRepo::Application:
+        Name: automation-api
+        Description: This repo provides API's for managing the templates and trigger automation for sending out emails to the customer clients.
+        Author: AKMAZO
+        ReadmeUrl: ./README.md
+        Labels:
+            - automation-engine
+            - api
+            - lambda
+        HomePageUrl: https://github.com/BookingBug/Automation-Engine
+        SemanticVersion: 1.1.4
+        SourceCodeUrl: https://github.com/BookingBug/Automation-Engine.git
+
 Resources:
     AutomationEngineDbCredentialsSecret:
         Type: AWS::SecretsManager::Secret
