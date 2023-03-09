@@ -29,13 +29,11 @@ Metadata:
         Name: automation-api
         Description: This repo provides API's for managing the templates and trigger automation for sending out emails to the customer clients.
         Author: AKMAZO
-        ReadmeUrl: ./README.md
         Labels:
             - automation-engine
             - api
             - lambda
         HomePageUrl: https://github.com/BookingBug/Automation-Engine
-        SemanticVersion: 1.1.4
         SourceCodeUrl: https://github.com/BookingBug/Automation-Engine.git
 
 Resources:
@@ -102,12 +100,12 @@ Resources:
             Engine: aurora-postgresql
             EngineVersion: 14.6
             Port: 5432
-            DBSubnetGroupName: default-vpc-088de60f0060036ad
+            DBSubnetGroupName: default
             BackupRetentionPeriod: 3
             StorageEncrypted: true
             PreferredMaintenanceWindow: tue:11:25-tue:11:55
             VpcSecurityGroupIds:
-                - sg-07c4d193c6dc24ab5 #EDIT THIS
+                - sg-009a92515100faf2e
 
     AutomationEngineInstance1:
         Type: AWS::RDS::DBInstance
@@ -118,7 +116,7 @@ Resources:
             Engine: aurora-postgresql
             EngineVersion: 14.6
             DBInstanceClass: db.t3.medium
-            DBSubnetGroupName: default-vpc-088de60f0060036ad
+            DBSubnetGroupName: default
             PreferredMaintenanceWindow: tue:12:25-tue:12:55
 
 
