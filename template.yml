@@ -51,12 +51,14 @@ Resources:
     AutomationEngineDBSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
+            GroupName: db-sg
             GroupDescription: A database security group.
             VpcId: vpc-088de60f0060036ad
     
     AutomationEngineLambdaSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
+            GroupName: lambda-sg
             GroupDescription: Security Group for Lambda.
             VpcId: vpc-088de60f0060036ad
 
