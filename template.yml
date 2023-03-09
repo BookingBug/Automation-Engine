@@ -113,7 +113,7 @@ Resources:
         Type: AWS::RDS::DBInstance
         Properties:
             DBClusterIdentifier:
-                Ref: !Sub 'AutomationEngineRDSCluster-${Environment}'
+                Ref: 'AutomationEngineRDSCluster'
             DBInstanceIdentifier: !Sub 'Automation-Engine-Instance-${Environment}-1'
             Engine: aurora-postgresql
             EngineVersion: 14.6
