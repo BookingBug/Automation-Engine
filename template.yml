@@ -51,7 +51,7 @@ Resources:
     AutomationEngineDBSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
-            GroupName: db-sg
+            GroupName: database-sg
             GroupDescription: A database security group.
             VpcId: vpc-088de60f0060036ad
     
@@ -62,7 +62,7 @@ Resources:
             GroupDescription: Security Group for Lambda.
             VpcId: vpc-088de60f0060036ad
 
-    AutomationEngineLambdaIngressRule:
+    AutomationEngineLambdaToDBIngressRule:
         Type: AWS::EC2::SecurityGroupIngress
         Properties:
             Description: Allows lambda to access the database.
@@ -70,7 +70,15 @@ Resources:
             IpProtocol: tcp
             FromPort: 5432
             ToPort: 5432
-            SourceSecurityGroupId: !Ref AutomationEngineLambdaSecurityGroup
+            SourceSecurityGroupId: !Ref AutomationEngineDBSecurityGroup
+
+    AutomationEngineLambdaAllIngressRule:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Allows all traffic to lambda.
+            GroupId: !Ref AutomationEngineLambdaSecurityGroup
+            IpProtocol: "-1"
+            SourceSecurityGroupId: !Ref AutomationEngineDBSecurityGroup
 
     AutomationEngineDBIngressRule:
         Type: AWS::EC2::SecurityGroupIngress
