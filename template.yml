@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: The supporting infrastructure for the Automation Engine API Service.
+Parameters:
+    SSLCertificate:
+        Type: 'AWS::SSM::Parameter::Value<String>'
+        Default: JRNI_certificate #to be replaced
+    Environment:
+        Type: String
+        Description: The environment as which to deploy admin portal apis.
+        AllowedValues:
+            - tst
+            - prod
+        ConstraintDescription: Value must be a known environment.
+
+Conditions:
+    IsTest: !Equals [!Ref Environment, 'tst']
+Globals:
+    Function:
+        Runtime: nodejs14.x
+        Timeout: 29 #Ideal as Gateway Timeouts in 30 too. The user will atleast get a response that lambda timed out
+        MemorySize: 1024
+        Environment:
+            Variables:
+                CertificateArn: !Ref SSLCertificate
+
+Resources:
+    AutomationEngineDbCredentialsSecret:
+        Type: AWS::SecretsManager::Secret
+        Properties:
+            Description: The client ID and secret for the Schedule Tracker.
+            Name: !Sub 'AutomationEngineDbCredentialsSecret-${Environment}'
+            GenerateSecretString:
+                SecretStringTemplate: '{"username": "akmazo","port": "5432", "database": "automation-engine", "host": ""}' #EDIT THIS
+                GenerateStringKey: 'password' #EDIT THIS
+                PasswordLength: 8
+                ExcludeCharacters: '"@/\'
+
+    AutomationEngineDBSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: A database security group.
+            VpcId: default-vpc-088de60f0060036ad
+
+    AutomationLambdaToProxyIngressRule:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Allows Schedule Tracker lambda to access the database.
+            IpProtocol: tcp
+            GroupId: !Ref AutomationEngineDBSecurityGroup
+            FromPort: 5432
+            ToPort: 5432
+            SourceSecurityGroupId: sg-0de07f65961e3be93
+
+    AutomationBastionToProxyIngressRule:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Allows bastion to access the database.
+            IpProtocol: tcp
+            GroupId: !Ref AutomationEngineDBSecurityGroup
+            FromPort: 5432
+            ToPort: 5432
+            SourceSecurityGroupId: sg-0e3670f02f02c6381
+
+    AutomationEngineRDSCluster:
+        Type: AWS::RDS::DBCluster
+        Properties:
+            DBClusterIdentifier: !Sub 'Automation-Engine-Cluster-${Environment}'
+            MasterUsername:
+                !Join [
+                    '',
+                    [
+                        '{{resolve:secretsmanager:',
+                        !Ref AutomationEngineDbCredentialsSecret,
+                        ':SecretString:username}}',
+                    ],
+                ]
+            MasterUserPassword:
+                !Join [
+                    '',
+                    [
+                        '{{resolve:secretsmanager:',
+                        !Ref AutomationEngineDbCredentialsSecret,
+                        ':SecretString:password}}',
+                    ],
+                ]
+            DatabaseName: !Sub 'Automation-Engine-${Environment}'
+            Engine: aurora-postgresql
+            EngineVersion: 14.6
+            Port: 5432
+            DBSubnetGroupName: default-vpc-088de60f0060036ad
+            BackupRetentionPeriod: 3
+            StorageEncrypted: true
+            PreferredMaintenanceWindow: tue:11:25-tue:11:55
+            VpcSecurityGroupIds:
+                - sg-07c4d193c6dc24ab5 #EDIT THIS
+
+    AutomationEngineInstance1:
+        Type: AWS::RDS::DBInstance
+        Properties:
+            DBClusterIdentifier:
+                Ref: !Sub 'AutomationEngineRDSCluster-${Environment}'
+            DBInstanceIdentifier: !Sub 'Automation-Engine-Instance-${Environment}-1'
+            Engine: aurora-postgresql
+            EngineVersion: 14.6
+            DBInstanceClass: db.t3.medium
+            DBSubnetGroupName: default-vpc-088de60f0060036ad
+            PreferredMaintenanceWindow: tue:12:25-tue:12:55
+
+
+Outputs:
+    AutomationEngineDbSecretsArn:
+        Description: Arn for db secretsmanager
+        Value: !Ref AutomationEngineDbCredentialsSecret-${Environment}
+        Export:
+            Name: !Sub 'AutomationEngineDbSecretsArn-${Environment}'

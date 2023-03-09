@@ -1,0 +1,40 @@
+{
+    "name": "automation-engine",
+    "version": "1.0.0",
+    "description": "This serves as an API to manage templates and trigger email automation",
+    "license": "BSD-2-Clause",
+    "author": "Akmazo",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/BookingBug/Automation-Engine"  
+    },
+    "dependencies": {
+        "aws-sdk": "2.377.0",
+        "axios": "^0.19.2",
+        "config": "^3.0.1",
+        "fs": "0.0.1-security",
+        "js-yaml": "^3.13.1",
+        "lodash": "^4.17.15",
+        "pg-promise": "^8.7.5",
+        "uuid": "^7.0.3"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.24",
+        "@types/config": "0.0.34",
+        "@types/lodash": "^4.14.123",
+        "@types/luxon": "^1.15.1",
+        "@types/node": "^8.9.3",
+        "@types/pg-promise": "^5.4.3",
+        "@types/uuid": "^3.4.4",
+        "rimraf": "^2.6.3",
+        "tslint": "^5.16.0",
+        "typescript": "^3.4.5"
+    },
+    "scripts": {
+        "clean": "rimraf js",
+        "compile": "npm run clean && tsc",
+        "compile:watch": "tsc --watch",
+        "prestart": "npm run compile",
+        "start": "sam local start-api --parameter-overrides \"Environment=tst\" --skip-pull-image"
+    }
+}
