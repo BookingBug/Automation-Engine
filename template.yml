@@ -125,6 +125,6 @@ Resources:
 Outputs:
     AutomationEngineDbSecretsArn:
         Description: Arn for db secretsmanager
-        Value: !Ref AutomationEngineDbCredentialsSecret-${Environment}
+        Value: !Ref AutomationEngineDbCredentialsSecret
         Export:
             Name: !Sub 'AutomationEngineDbSecretsArn-${Environment}'
