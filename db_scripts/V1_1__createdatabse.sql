@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS emailreview;
 
 CREATE TYPE TEMPLATESTATUS AS ENUM ('Draft', 'Active');
 
-CREATE TABLE  automationtemplate {
+CREATE TABLE automationtemplate {
   templateid VARCHAR(255) PRIMARY KEY,
   companyid VARCHAR(255),
   template JSONB,
