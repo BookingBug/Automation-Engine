@@ -14,9 +14,9 @@ DROP TABLE IF EXISTS emailreview;
 
 CREATE TYPE TEMPLATESTATUS AS ENUM ('Draft', 'Active');
 
-CREATE TABLE automationtemplate {
-  templateid VARCHAR(255) PRIMARY KEY,
-  companyid VARCHAR(255),
+CREATE TABLE automationtemplate (
+  templateid VARCHAR(255) PRIMARY KEY UNIQUE,
+  companyid VARCHAR(255) UNIQUE,
   template JSONB,
   createdBy VARCHAR(255),
   createdAt TIMESTAMP without time zone,
@@ -26,54 +26,54 @@ CREATE TABLE automationtemplate {
   description VARCHAR(255),
   categoryid VARCHAR(255),
   status TEMPLATESTATUS
-};
+);
 
 CREATE INDEX idx_companyid_templateid  ON automationtemplate(companyid, templateid);
 
-CREATE TABLE rules {
-  ruleid VARCHAR(255) PRIMARY KEY,
+CREATE TABLE rules (
+  ruleid VARCHAR(255) PRIMARY KEY UNIQUE,
   rule JSONB,
   createdBy VARCHAR(255),
   createdAt TIMESTAMP without time zone,
   modifiedBy VARCHAR(255),
   modifiedAt TIMESTAMP without time zone
-};
+);
 
-CREATE TABLE assistanttemplaterelation {
+CREATE TABLE assistanttemplaterelation (
   assistantid VARCHAR(255),
   templateid VARCHAR(255)
-};
+);
 
-CREATE TABLE templatestatistics {
-  templateid VARCHAR(255) PRIMARY KEY,
+CREATE TABLE templatestatistics (
+  templateid VARCHAR(255) PRIMARY KEY UNIQUE,
   sent INT,
   opened INT,
   responded INT,
   booked INT
-};
+);
 
-CREATE TABLE assistantrulerelation {
-  assistantid VARCHAR(255) PRIMARY KEY,
+CREATE TABLE assistantrulerelation (
+  assistantid VARCHAR(255) PRIMARY KEY UNIQUE,
   ruleid VARCHAR(255)
-};
+);
 
-CREATE TABLE automationassistant {
+CREATE TABLE automationassistant (
   companyid VARCHAR(255),
-  assistantid VARCHAR(255),
+  assistantid VARCHAR(255) UNIQUE,
   email VARCHAR(255),
-  metadata JSONB,
-};
+  metadata JSONB
+);
 
-CREATE TABLE automationinstance {
-  messageid VARCHAR(255) PRIMARY KEY,
+CREATE TABLE automationinstance (
+  messageid VARCHAR(255) PRIMARY KEY UNIQUE,
   templateid VARCHAR(255),
-  emailinfo JSONB
+  emailinfo JSONB,
   rootmessageid VARCHAR(255),
   replytomessageid VARCHAR(255)
-};
+);
 
-CREATE TABLE category {
-  categoryid VARCHAR(255),
+CREATE TABLE category (
+  categoryid VARCHAR(255) PRIMARY KEY UNIQUE,
   metadata JSONB,
   categoryname VARCHAR(255),
   description VARCHAR(255),
@@ -81,15 +81,15 @@ CREATE TABLE category {
   createdAt TIMESTAMP without time zone,
   modifiedBy VARCHAR(255),
   modifiedAt TIMESTAMP without time zone
-};
+);
 
--- CREATE TYPE EMAILSTATUS AS ENUM ('Draft', 'Edit & Send', 'Sent');
+CREATE TYPE EMAILSTATUS AS ENUM ('Draft', 'Edit & Send', 'Sent');
 
-CREATE TABLE emailreview {
+CREATE TABLE emailreview (
   replytomessageid VARCHAR(255),
   generatedreply JSONB,
   status EMAILSTATUS
-};
+);
 
 
 ALTER TABLE templatestatistics
@@ -120,10 +120,10 @@ ALTER TABLE automationinstance
 DROP CONSTRAINT IF EXISTS automationinstance_automationtemplate_fkey,
 ADD CONSTRAINT automationinstance_automationtemplate_fkey FOREIGN KEY(templateid) REFERENCES automationtemplate(templateid);
 
-ALTER TABLE category
-DROP CONSTRAINT IF EXISTS category_automationtemplate_fkey,
-ADD CONSTRAINT category_automationtemplate_fkey FOREIGN KEY(categoryid) REFERENCES automationtemplate(categoryid);
+ALTER TABLE automationtemplate
+DROP CONSTRAINT IF EXISTS automationtemplate_category_fkey,
+ADD CONSTRAINT automationtemplate_category_fkey FOREIGN KEY(categoryid) REFERENCES category(categoryid);
 
 ALTER TABLE emailreview
 DROP CONSTRAINT IF EXISTS emailreview_automationinstance_fkey,
-ADD CONSTRAINT emailreview_automationinstance_fkey FOREIGN KEY(replytomessageid) REFERENCES automationassistant(replytomessageid);
+ADD CONSTRAINT emailreview_automationinstance_fkey FOREIGN KEY(replytomessageid) REFERENCES automationinstance(messageid);
