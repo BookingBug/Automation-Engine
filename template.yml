@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: The supporting infrastructure for the Automation Engine API Service.
+Parameters:
+    SSLCertificate:
+        Type: 'AWS::SSM::Parameter::Value<String>'
+        Default: JRNI_certificate #to be replaced
+    Environment:
+        Type: String
+        Description: The environment as which to deploy admin portal apis.
+        AllowedValues:
+            - tst
+            - prod
+        ConstraintDescription: Value must be a known environment.
+
+Conditions:
+    IsTest: !Equals [!Ref Environment, 'tst']
+Globals:
+    Function:
+        Runtime: nodejs14.x
+        Timeout: 29 #Ideal as Gateway Timeouts in 30 too. The user will atleast get a response that lambda timed out
+        MemorySize: 1024
+        Environment:
+            Variables:
+                CertificateArn: !Ref SSLCertificate
+
+Metadata:
+    AWS::ServerlessRepo::Application:
+        Name: automation-api
+        Description: This repo provides API's for managing the templates and trigger automation for sending out emails to the customer clients.
+        Author: AKMAZO
+        Labels:
+            - automation-engine
+            - api
+            - lambda
+        HomePageUrl: https://github.com/BookingBug/Automation-Engine
+        SourceCodeUrl: https://github.com/BookingBug/Automation-Engine.git
+
+Resources:
+    AutomationEngineDbCredentialsSecret:
+        Type: AWS::SecretsManager::Secret
+        Properties:
+            Description: The client ID and secret for the Schedule Tracker.
+            Name: !Sub 'AutomationEngineDbCredentialsSecret-${Environment}'
+            GenerateSecretString:
+                SecretStringTemplate: '{"username": "akmazo","port": "5432", "database": "automationenginetst", "host": ""}' #EDIT THIS
+                GenerateStringKey: 'password' #EDIT THIS
+                PasswordLength: 8
+                ExcludeCharacters: '"@/\'
+
+    AutomationEngineDBSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupName: database-sg
+            GroupDescription: A database security group.
+            VpcId: vpc-088de60f0060036ad
+    
+    AutomationEngineLambdaSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupName: lambda-sg
+            GroupDescription: Security Group for Lambda.
+            VpcId: vpc-088de60f0060036ad
+
+    AutomationEngineLambdaToDBIngressRule:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Allows lambda to access the database.
+            GroupId: !Ref AutomationEngineDBSecurityGroup
+            IpProtocol: tcp
+            FromPort: 5432
+            ToPort: 5432
+            SourceSecurityGroupId: !Ref AutomationEngineLambdaSecurityGroup
+
+    AutomationEngineLambdaAllIngressRule:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Allows all traffic to lambda.
+            GroupId: !Ref AutomationEngineLambdaSecurityGroup
+            IpProtocol: "-1"
+
+    AutomationEngineRDSCluster:
+        Type: AWS::RDS::DBCluster
+        Properties:
+            DBClusterIdentifier: !Sub 'Automation-Engine-Cluster-${Environment}'
+            MasterUsername:
+                !Join [
+                    '',
+                    [
+                        '{{resolve:secretsmanager:',
+                        !Ref AutomationEngineDbCredentialsSecret,
+                        ':SecretString:username}}',
+                    ],
+                ]
+            MasterUserPassword:
+                !Join [
+                    '',
+                    [
+                        '{{resolve:secretsmanager:',
+                        !Ref AutomationEngineDbCredentialsSecret,
+                        ':SecretString:password}}',
+                    ],
+                ]
+            DatabaseName: !Sub 'automationengine${Environment}'
+            Engine: aurora-postgresql
+            EngineVersion: 14.6
+            Port: 5432
+            DBSubnetGroupName: default
+            BackupRetentionPeriod: 3
+            StorageEncrypted: true
+            PreferredMaintenanceWindow: tue:11:25-tue:11:55
+            VpcSecurityGroupIds:
+                - sg-009a92515100faf2e
+
+    AutomationEngineInstance1:
+        Type: AWS::RDS::DBInstance
+        Properties:
+            DBClusterIdentifier:
+                Ref: 'AutomationEngineRDSCluster'
+            DBInstanceIdentifier: !Sub 'Automation-Engine-Instance-${Environment}-1'
+            Engine: aurora-postgresql
+            EngineVersion: 14.6
+            DBInstanceClass: db.t3.medium
+            DBSubnetGroupName: default
+            PreferredMaintenanceWindow: tue:12:25-tue:12:55
+
+
+Outputs:
+    AutomationEngineDbSecretsArn:
+        Description: Arn for db secretsmanager
+        Value: !Ref AutomationEngineDbCredentialsSecret
+        Export:
+            Name: !Sub 'AutomationEngineDbSecretsArn-${Environment}'

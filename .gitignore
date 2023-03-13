@@ -1,0 +1,8 @@
+node_modules/
+.vscode
+js/
+coverage/
+.nyc_output/
+.serverless/
+src/constants/env.json
+node_modules
